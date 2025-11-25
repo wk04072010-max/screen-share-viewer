@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>サイトB（閲覧）</title>
+</head>
+<body>
+  <h1>サイトB（閲覧側）</h1>
+  <video id="remoteVideo" autoplay playsinline></video>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const socket = io();
+    let pc = new RTCPeerConnection();
+
+    const videoEl = document.getElementById("remoteVideo");
+    pc.ontrack = e => {
+      videoEl.srcObject = e.streams[0];
+    };
+
+    socket.on("new-offer", async (offer) => {
+      await pc.setRemoteDescription(offer);
+      const answer = await pc.createAnswer();
+      await pc.setLocalDescription(answer);
+      socket.emit("a-answer", answer);
+    });
+
+    socket.emit("b-ready"); // 接続準備完了
+  </script>
+</body>
+</html>
